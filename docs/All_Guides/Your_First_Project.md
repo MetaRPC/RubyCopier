@@ -22,7 +22,7 @@ In this guide you will:
 require 'rubycopier'
 
 # 1. Initialize Copier Client
-client = RubyCopier::CopierService.new('copy.mrpc.pro:443', user_key: 'YOUR_USER_KEY', manager_key: 'YOUR_MANAGER_KEY')
+client = RubyCopier::CopierService.new('copy.mrpc.pro:443', user_key: 'YOUR_USER_KEY')
 
 # 2. Start Copier
 reply = client.start(
