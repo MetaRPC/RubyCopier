@@ -8,9 +8,15 @@ module Copier
   module CopierService
     # Trade copier operations over gRPC.
     #
-    # Credentials (passwords) are strictly carried in the request body over HTTP/2 gRPC,
-    # preventing plain-text credential leakage in HTTP query parameters, server access logs,
-    # or proxy routing histories.
+    # This exists for one reason: the REST equivalents take the master's and slave's MT account
+    # PASSWORDS as query parameters. A query string is written to the ingress log, to any proxy in
+    # between, and to the browser's history — so every copier ever started has put two sets of live
+    # trading credentials into plain-text logs. gRPC carries them in the request body over HTTP/2,
+    # where nothing on the path records them.
+    #
+    # The REST endpoints are untouched and still serve copyfront. This is an additional transport for
+    # the same operations, not a replacement, and it delegates to exactly the same implementation so
+    # the two cannot drift.
     class Service
 
       include ::GRPC::GenericService
@@ -19,30 +25,14 @@ module Copier
       self.unmarshal_class_method = :decode
       self.service_name = 'copier.CopierService'
 
-      # Start a trade copier between master and slave accounts.
+      # Start a copier. The only call that carries credentials.
       rpc :Start, ::Copier::StartRequest, ::Copier::StartReply
-      # List all active and paused copiers belonging to a user.
+      # Every copier belonging to a user. Never returns stored passwords — see CopierSummary.
       rpc :List, ::Copier::ListRequest, ::Copier::ListReply
-      # Pause or resume an existing copier without deleting configuration.
+      # Pause or resume.
       rpc :Pause, ::Copier::PauseRequest, ::Copier::SimpleReply
-      # Remove a copier and unregister trade hooks.
+      # Remove a copier.
       rpc :Remove, ::Copier::RemoveRequest, ::Copier::SimpleReply
-    end
-
-    Stub = Service.rpc_stub_class
-  end
-  module DemoAccount
-    # Demo account creation service definition
-    class Service
-
-      include ::GRPC::GenericService
-
-      self.marshal_class_method = :encode
-      self.unmarshal_class_method = :decode
-      self.service_name = 'copier.DemoAccount'
-
-      # Provision a new MetaTrader demo account on the fly.
-      rpc :OpenDemoAccount, ::Copier::GuiDemoOpenAccountRequest, ::Copier::GuiDemoOpenAccountReply
     end
 
     Stub = Service.rpc_stub_class

@@ -24,14 +24,33 @@ module RubyCopier
     end
 
     def start(params)
+      master_account = params[:master] ? Copier::Account.new(
+        type: params[:master][:type] || 'MT5',
+        user: params[:master][:user] || 0,
+        password: params[:master][:password] || '',
+        server: params[:master][:server] || '',
+        name: params[:master][:name] || '',
+        id: params[:master][:id] || ''
+      ) : nil
+      slave_account = params[:slave] ? Copier::Account.new(
+        type: params[:slave][:type] || 'MT5',
+        user: params[:slave][:user] || 0,
+        password: params[:slave][:password] || '',
+        server: params[:slave][:server] || '',
+        name: params[:slave][:name] || '',
+        id: params[:slave][:id] || ''
+      ) : nil
+
       req = Copier::StartRequest.new(
         user_key: params[:user_key] || @user_key,
         manager_key: params[:manager_key] || @manager_key,
         risk_type: params[:risk_type] || 'LotMultiplier',
-        risk_value: params[:risk_value] || '1.0'
+        risk_value: params[:risk_value] || '1.0',
+        master: master_account,
+        slave: slave_account
       )
       begin
-        reply = @stub.start(req, metadata: metadata)
+        reply = @stub.start(req, metadata: metadata, deadline: Time.now + 180)
         OpenStruct.new(ok: reply.ok, copier_id: reply.copier_id, error: reply.error)
       rescue => e
         OpenStruct.new(ok: false, error: e.message)
