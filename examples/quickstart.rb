@@ -148,11 +148,11 @@ ensure
   # 9. Cleanly Disconnect Terminal Sessions
   puts "\n[9] Disconnecting terminal sessions cleanly via /Disconnect..."
   unless master_guid.empty?
-    disc_m = demo.disconnect(master_guid, api_key: api_key)
+    disc_m = demo.disconnect(master_guid, api_key: api_key, delete: true)
     puts "    Master Terminal Cleanly Disconnected: #{disc_m.unique_identifier} (Lifetime: #{disc_m.lifetime_seconds}s)"
   end
   unless slave_guid.empty?
-    disc_s = demo.disconnect(slave_guid, api_key: api_key)
+    disc_s = demo.disconnect(slave_guid, api_key: api_key, delete: true)
     puts "    Slave Terminal Cleanly Disconnected:  #{disc_s.unique_identifier} (Lifetime: #{disc_s.lifetime_seconds}s)"
   end
 

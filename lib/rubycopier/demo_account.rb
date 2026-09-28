@@ -51,11 +51,12 @@ module RubyCopier
       )
     end
 
-    def disconnect(terminal_id, api_key: "TRIAL")
-      uri = URI("#{@base_url}/Disconnect")
+    def disconnect(terminal_id, api_key: "TRIAL", delete: false)
+      uri = URI("#{@base_url}/Disconnect?delete=#{delete}")
       req = Net::HTTP::Get.new(uri)
       req['APIKey'] = api_key
       req['id'] = terminal_id
+      req['delete'] = 'true' if delete
       req['User-Agent'] = 'RubyCopier/1.0.0'
 
       http = Net::HTTP.new(uri.host, uri.port)
