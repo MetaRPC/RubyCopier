@@ -3,7 +3,7 @@ require_relative '../lib/rubycopier'
 $stdout.sync = true
 
 puts "=== MetaRPC RubyCopier Trade Replication Quick Start ==="
-api_key = "TRIAL"
+api_key = ARGV[0] || ENV["MRPC_API_KEY"] || "TRIAL"
 
 demo = RubyCopier::DemoAccountClient.new("https://mt5.mrpc.pro")
 client = RubyCopier::CopierService.new("copy.mrpc.pro:443", user_key: api_key)
