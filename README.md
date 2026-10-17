@@ -8,7 +8,7 @@ Official Ruby SDK for the MetaRPC Trade Copier high-performance trade replicatio
 ## Installation
 
 ```bash
-gem install rubycopier
+git clone https://github.com/MetaRPC/RubyCopier.git
 ```
 
 ## 🏃 How to Run Examples

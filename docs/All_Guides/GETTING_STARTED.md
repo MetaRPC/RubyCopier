@@ -4,10 +4,10 @@ Welcome to **RubyCopier**, the official Ruby client library for MetaRPC's ultra-
 
 ## Installation
 
-Install RubyCopier using your language's package manager:
+RubyCopier is not published on a package registry; get it from the repository:
 
 ```bash
-gem install rubycopier
+git clone https://github.com/MetaRPC/RubyCopier.git
 ```
 
 ## Infrastructure Endpoints
