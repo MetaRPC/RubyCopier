@@ -5,6 +5,16 @@ require 'ostruct'
 
 module RubyCopier
   class DemoAccountClient
+    def parse_reply(body)
+      data = JSON.parse(body)
+      if data.is_a?(Hash) && data['error']
+        error = data['error']
+        code = error.is_a?(Hash) ? error.fetch('errorCode', 'API_ERROR') : 'API_ERROR'
+        raise "MRPC request failed: #{code}"
+      end
+      data
+    end
+
     def initialize(endpoint = "https://mt5.mrpc.pro")
       clean = endpoint.sub(%r{^https?://}, '').sub(/:443$/, '').chomp('/')
       @base_url = "https://#{clean}"
@@ -21,7 +31,7 @@ module RubyCopier
       res = http.request(req)
       raise "DemoAccount/Open failed with HTTP #{res.code}: #{res.body}" unless res.is_a?(Net::HTTPSuccess)
 
-      data = JSON.parse(res.body)
+      data = parse_reply(res.body)
       OpenStruct.new(
         result_code: data['resultCode'] || 0,
         login: data['login'].to_i,
@@ -44,7 +54,7 @@ module RubyCopier
       res = http.request(req)
       raise "ConnectEx failed with HTTP #{res.code}: #{res.body}" unless res.is_a?(Net::HTTPSuccess)
 
-      data = JSON.parse(res.body)
+      data = parse_reply(res.body)
       OpenStruct.new(
         terminal_instance_guid: data.dig('data', 'terminalInstanceGuid') || '',
         terminal_type: data.dig('data', 'terminalType') || 'MT5'
@@ -64,7 +74,7 @@ module RubyCopier
       res = http.request(req)
       raise "Disconnect failed with HTTP #{res.code}: #{res.body}" unless res.is_a?(Net::HTTPSuccess)
 
-      data = JSON.parse(res.body)
+      data = parse_reply(res.body)
       OpenStruct.new(
         unique_identifier: data.dig('data', 'uniqueIdentifier') || '',
         lifetime_seconds: data.dig('data', 'fullLifeTimeSeconds') || 0
@@ -87,7 +97,7 @@ module RubyCopier
       res = http.request(req)
       raise "OrderSend failed: #{res.body}" unless res.is_a?(Net::HTTPSuccess)
 
-      data = JSON.parse(res.body)
+      data = parse_reply(res.body)
       ticket = data.dig('data', 'order') || data.dig('data', 'ticket') || data['order'] || data['ticket'] || 0
       ticket.to_i
     end
@@ -104,7 +114,7 @@ module RubyCopier
       res = http.request(req)
       return [] unless res.is_a?(Net::HTTPSuccess)
 
-      data = JSON.parse(res.body)
+      data = parse_reply(res.body)
       if data.is_a?(Array)
         data
       elsif data.is_a?(Hash)
@@ -125,6 +135,7 @@ module RubyCopier
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
       res = http.request(req)
+      parse_reply(res.body)
       res.body
     end
   end
