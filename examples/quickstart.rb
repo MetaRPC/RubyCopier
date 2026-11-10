@@ -3,7 +3,7 @@ require_relative '../lib/rubycopier'
 $stdout.sync = true
 
 puts "=== MetaRPC RubyCopier Trade Replication Quick Start ==="
-api_key = ARGV[0] || ENV["MRPC_API_KEY"] || "TRIAL"
+api_key = ARGV[0] || ENV["MRPC_API_KEY"] || ""
 
 demo = RubyCopier::DemoAccountClient.new("https://mt5.mrpc.pro")
 client = RubyCopier::CopierService.new("copy.mrpc.pro:443", user_key: api_key)
@@ -24,7 +24,7 @@ begin
   sleep 1
 
   # 2. Connect terminals via ConnectEx
-  puts "\n[2] Connecting terminals via ConnectEx (APIKey: #{api_key})..."
+  puts "\n[2] Connecting terminals via ConnectEx (authenticated)..."
   3.times do |i|
     begin
       conn_m = demo.connect_ex(user: master.login, password: master.password, server: master.server, api_key: api_key)

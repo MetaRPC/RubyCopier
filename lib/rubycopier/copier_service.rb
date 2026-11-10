@@ -6,6 +6,9 @@ require_relative 'copier_services_pb'
 module RubyCopier
   class CopierService
     def initialize(endpoint, user_key:, manager_key: nil)
+      unless user_key.is_a?(String) && user_key.match?(/\A[!-~]+\z/) && user_key.upcase != 'TRIAL'
+        raise ArgumentError, 'A real owner API key is required (printable ASCII, no whitespace).'
+      end
       clean = endpoint.sub(%r{^https?://}, '').sub(%r{^wss?://}, '').sub(%r{/$}, '')
       clean += ':443' unless clean.include?(':')
       @endpoint = clean
@@ -18,7 +21,7 @@ module RubyCopier
 
     def metadata
       {
-        'authorization' => "Bearer #{@user_key}",
+        'apikey' => @user_key,
         'x-metarpc-client-sdk' => 'RubyCopier/1.0.0'
       }
     end
@@ -47,6 +50,11 @@ module RubyCopier
         risk_type: params[:risk_type] || 'LotMultiplier',
         risk_value: params[:risk_value] || '1.0',
         master: master_account,
+        fixed_master_balance: params[:fixed_master_balance] || '',
+        copy_sl: params.fetch(:copy_sl, true),
+        copy_tp: params.fetch(:copy_tp, true),
+        copy_pending_orders: params.fetch(:copy_pending_orders, false),
+        reverse_copy: params.fetch(:reverse_copy, false),
         slave: slave_account
       )
       begin
@@ -60,7 +68,8 @@ module RubyCopier
     def list
       req = Copier::ListRequest.new(user_key: @user_key)
       begin
-        reply = @stub.list(req, metadata: metadata)
+        reply = @stub.list(req, metadata: metadata, deadline: Time.now + 10)
+        raise StandardError, reply.error unless reply.ok
         reply.copiers.map do |c|
           OpenStruct.new(
             id: c.id,
@@ -77,14 +86,14 @@ module RubyCopier
           )
         end
       rescue => e
-        []
+        raise
       end
     end
 
     def pause(copier_id, paused: true)
       req = Copier::PauseRequest.new(user_key: @user_key, copier_id: copier_id, paused: paused)
       begin
-        reply = @stub.pause(req, metadata: metadata)
+        reply = @stub.pause(req, metadata: metadata, deadline: Time.now + 10)
         OpenStruct.new(ok: reply.ok, error: reply.error)
       rescue => e
         OpenStruct.new(ok: false, error: e.message)
@@ -94,7 +103,7 @@ module RubyCopier
     def remove(copier_id)
       req = Copier::RemoveRequest.new(user_key: @user_key, copier_id: copier_id)
       begin
-        reply = @stub.remove(req, metadata: metadata)
+        reply = @stub.remove(req, metadata: metadata, deadline: Time.now + 10)
         OpenStruct.new(ok: reply.ok, error: reply.error)
       rescue => e
         OpenStruct.new(ok: false, error: e.message)
