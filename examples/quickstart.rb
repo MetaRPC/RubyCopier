@@ -1,3 +1,4 @@
+abort 'Set MRPC_LIVE_TESTS=1 explicitly to run demo trading' unless ENV['MRPC_LIVE_TESTS']=='1'
 require_relative '../lib/rubycopier'
 
 $stdout.sync = true
